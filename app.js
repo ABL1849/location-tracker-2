@@ -38,34 +38,29 @@ const server = http.createServer(app);
 const io = socketio(server);
 const path = require('path');
 
-// Set view engine and static files
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, "public")));
 
-// Socket.io connection
-io.on("connection", (socket) => {
-    console.log(`New connection: ${socket.id}`);
+io.on("connection", function (socket) {
+    console.log("New connection:", socket.id);
 
-    // Receive location and broadcast to all clients
-    socket.on("send-location", (data) => {
-        console.log(`Location received from ${socket.id}:`, data);
+    // Assign a unique ID to the socket
+    socket.emit("assign-id", { id: socket.id });
+
+    socket.on("send-location", function (data) {
         io.emit("receive-location", { id: socket.id, ...data });
     });
 
-    // Handle disconnection
-    socket.on("disconnect", () => {
-        console.log(`User disconnected: ${socket.id}`);
+    socket.on("disconnect", function () {
         io.emit("user-disconnected", socket.id);
+        console.log(`User disconnected: ${socket.id}`);
     });
 });
 
-// Render index page
-app.get("/", (req, res) => {
+app.get("/", function (req, res) {
     res.render("index");
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+server.listen(3000, () => {
+    console.log("Server is running on port 3000");
 });
